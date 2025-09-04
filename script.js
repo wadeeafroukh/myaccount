@@ -85,7 +85,7 @@ window.updateAmount = (actionId) => {
   if (newAmount == null || newAmount == "")
     alert("Somthing went wrong try again");
   else {
-    manger.updateAction(actionId, +newAmount);
+    manger.updateAction(actionId, + newAmount);
     showActionsinTable();
     setTomemory();
   }
