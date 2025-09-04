@@ -10,22 +10,31 @@ console.log(manger.balance);
 let savedData = localStorage.getItem("manger");
 if (savedData) {
   try {
-    manger.actions = JSON.parse(savedData);
+    const raw = JSON.parse(savedData);
+    manger.actions = raw.map(
+      (a) => new Action(a.type, a.description, a.amount, new Date(a.date))
+    );
     manger.calcBalance();
-    
   } catch (error) {
-    alert(`Bad saved data: ${error}`)
+    alert(`Bad saved data: ${error}`);
   }
 }
 
-
 let setTomemory = () => {
-  localStorage.setItem("manger",JSON.stringify(manger.actions));
-
+  localStorage.setItem("manger", JSON.stringify(manger.actions));
 };
+
+let formatDateTime = (d) =>
+  new Date(d).toLocaleString("en-US", {
+    dateStyle: "short",
+    timeStyle: "short",
+  });
 let showActionsinTable = () => {
   let table = document.getElementById("actions");
   table.innerHTML = "";
+  let rows = [...manger.actions].sort(
+    (a, b) => new Date(b.date) - new Date(a.date)
+  );
   for (const action of manger.actions) {
     table.innerHTML += `
          <tr class= ${action.type == "income" ? "text-success" : "text-danger"}>
@@ -35,16 +44,22 @@ let showActionsinTable = () => {
          
          <td>${action.amount}</td>
 
-           <td style="cursor: pointer" onclick="updateAmount(${
-             action.id
-           })"><i class="fa-solid fa-pen-to-square"></i></td>
-
-             <td style="cursor: pointer" onclick="deleteAction(${
-               action.id
-             })"><i class="fa-solid fa-trash"></i></td>
-              </tr>`;
+         
+         <td>${formatDateTime(action.date)}</td>
+         <td style="cursor: pointer" onclick="updateAmount(${
+           action.id
+         })"><i class="fa-solid fa-pen-to-square"></i></td>
+         
+         <td style="cursor: pointer" onclick="deleteAction(${
+           action.id
+         })"><i class="fa-solid fa-trash"></i></td>
+         </tr>
+         `;
   }
-  document.querySelector(".alert").innerHTML = `Balance: ${manger.balance}₪`;
+  const alertEl = (document.querySelector(
+    ".alert"
+  ).innerHTML = `Balance: ${manger.balance}₪`);
+  if (alertEl) alertEl.innerHTML = `Balance ${manger.balance}₪`;
 };
 
 window.addnewAction = () => {
@@ -52,15 +67,17 @@ window.addnewAction = () => {
   let amount = Number(document.getElementById("amount").value);
   let description = document.getElementById("description").value;
   if (description === "" || amount <= 0) {
-    alert("please enter valid information (the number should be greater than zero!)");
+    alert(
+      "please enter valid information (the number should be greater than zero!)"
+    );
     return;
   }
   manger.addAction(new Action(type, description, amount));
+  document.getElementById("amount").value = "";
+  document.getElementById("description").value = "";
   showActionsinTable();
   setTomemory();
 
-  document.getElementById("amount").value = "";
-  document.getElementById("description").value = "";
 };
 
 window.updateAmount = (actionId) => {
